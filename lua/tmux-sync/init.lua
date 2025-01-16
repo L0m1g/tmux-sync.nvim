@@ -23,7 +23,7 @@ end
 -- 📡 Synchroniser les couleurs avec Tmux selon le mode
 M.set_tmux_status = function(mode)
     if not (is_tmux_installed() and is_in_tmux()) then
-        return  -- 🔒 Ne fait rien si tmux n'est pas dispo
+        return  -- Ne fait rien si tmux n'est pas dispo
     end
 
     local mode_colors = {
@@ -39,11 +39,16 @@ M.set_tmux_status = function(mode)
     local color = mode_colors[mode] or get_hl_color("MiniStatuslineModeNormal", "bg")
 
     -- 🛠️ Commande silencieuse pour changer la couleur de Tmux
-    vim.fn.system({ "tmux", "set-option", "-g", "status-bg", color })
+    os.execute(string.format("tmux set-option -g status-bg '%s'", color))
 end
 
--- 🔄 Détecte les changements de mode
-if is_tmux_installed() and is_in_tmux() then
+--  Initialisation sécurisée : Ne rien lancer si Tmux est absent
+M.setup = function()
+    if not (is_tmux_installed() and is_in_tmux()) then
+        return  --  Tmux absent ➔ on quitte
+    end
+
+    --  Détecte les changements de mode
     vim.api.nvim_create_autocmd("ModeChanged", {
         pattern = "*",
         callback = function()
